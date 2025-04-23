@@ -1,0 +1,8 @@
+numpy
+matplotlib
+scikit-image
+opencv-contrib-python
+jupyter_contrib_nbextensions
+opencv-python
+torch
+torchvision:q

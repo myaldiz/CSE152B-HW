@@ -1,0 +1,15 @@
+*~
+viso2_wrap.cpp
+*.so
+*.pyc
+src/build*
+.vscode
+vis_preFeature/*
+vis/*
+pyviso/SIFT/*
+pyviso/Flow/*
+pyviso/src/build
+pyviso/src/pyviso2.egg-info
+.ipynb_checkpoints/
+dataset_SfM
+*Copy*.ipynb
