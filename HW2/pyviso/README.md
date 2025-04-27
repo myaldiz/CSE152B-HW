@@ -21,14 +21,6 @@ The homework is in the Jupyter Notebook ``hw2-CSE152B-release.ipynb``.
 The dataset is originally from the [KITTI Odometry dataset](http://www.cvlibs.net/datasets/kitti/eval_odometry.php). You can download the data and organize them as in the cluster, or directly transfer from the cluster to your local machine with tools like `scp`.
 
 ```bash
-conda create --name cse152b-hw2-py38 python=3.8 pip
-conda activate cse152b-hw2-py38
-pip install -r requirements.txt
-pip jupyter
-conda install swig
-conda install nb_conda
-conda install conda-build gcc_linux-64 gxx_linux-64 gfortran_linux-64
-
 cd ./pyviso/src
 pip install -e .
 ```
