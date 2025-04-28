@@ -10,8 +10,8 @@ parser.add_argument('--input', type=str, required=True,
         help='Image directory or movie file or "camera" (for webcam).' )
 parser.add_argument('--first_frame', type=int, default=0,
         help='Image Id of first frame, default 0' )
-parser.add_argument('--last_frame', type=int, default=300,
-        help='Image Id of last frame, default value=300' )
+parser.add_argument('--last_frame', type=int, default=299,
+        help='Image Id of last frame, default value=299' )
 opt = parser.parse_args()
 print(opt)
 
