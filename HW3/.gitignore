@@ -1,0 +1,8 @@
+# data/
+CASIA-WebFace/
+lfw/
+pytorch-openpose/model/
+mtcnn/src/__pycache__/
+sphereFace/__pycache__/
+.ipynb_checkpoints/
+pytorch-openpose/src/__pycache__/
