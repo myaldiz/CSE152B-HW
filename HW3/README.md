@@ -14,7 +14,7 @@ The homework is in the Jupyter Notebook ``HW3.ipynb``.
  (c) Rename your submission files as Lastname_Firstname.ipynb and Lastname_Firstname.pdf.  
  (d) Correctly select pages for each answer on Gradescope to allow proper grading.
 
-6. **Due date:** Assignments are due X, by 11.59pm PST.
+6. **Due date:** Assignments are due May 18, by 11.59pm PST.
 
 ## Extra Instructions
 
