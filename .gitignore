@@ -1,6 +1,6 @@
 # Folders to ignore
 outputs/
-Data/
+# Data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -171,12 +171,12 @@ dmypy.json
 
 # Data & Models
 *.h5
-*.tar
-*.tar.gz
+# *.tar
+# *.tar.gz
 
 # Lightning-Hydra-Template
 configs/local/default.yaml
-/data/
+# /data/
 /logs/
 /notebooks/
 .env
