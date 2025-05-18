@@ -7,46 +7,62 @@ import torch.optim as optim
 import torchvision.utils as vutils
 from torch.utils.data import DataLoader
 import faceNet
+import faceNetBN
 import torch.nn as nn
 import os
 import numpy as np
+from pathlib import Path
+import shutil
 
+from torch.utils.tensorboard import SummaryWriter
 
 parser = argparse.ArgumentParser()
 # The locationi of training set
 parser.add_argument('--imageRoot', default='../CASIA-WebFace/', help='path to input images')
 parser.add_argument('--alignmentRoot', default='./data/casia_landmark.txt', help='path to the alignment file')
 parser.add_argument('--experiment', default='checkpoint', help='the path to store sampled images and models')
-parser.add_argument('--marginFactor', type=float, default=0.35, help='margin factor')
+parser.add_argument('--marginFactor', type=float, default=0.4, help='margin factor')
 parser.add_argument('--scaleFactor', type=float, default=30, help='scale factor')
 parser.add_argument('--imHeight', type=int, default=112, help='height of input image')
 parser.add_argument('--imWidth', type=int, default=96, help='width of input image')
 parser.add_argument('--batchSize', type=int, default=128, help='the size of a batch')
-parser.add_argument('--nepoch', type=int, default=20, help='the training epoch')
+parser.add_argument('--nepoch', type=int, default=30, help='the training epoch')
 parser.add_argument('--initLR', type=float, default=0.1, help='the initial learning rate')
 parser.add_argument('--noCuda', action='store_true', help='do not use cuda for training')
 parser.add_argument('--gpuId', type=int, default=0, help='gpu id used for training the network')
 parser.add_argument('--iterationDecreaseLR', type=int, nargs='+', default=[16000, 24000], help='the iteration to decrease learning rate')
-parser.add_argument('--iterationEnd', type=int, default=28000, help='the iteration to end training')
+parser.add_argument('--iterationEnd', type=int, default=280000, help='the iteration to end training')
 
 # The detail network setting
 opt = parser.parse_args()
 print(opt)
 
+opt.experiment = str(Path('logs') /opt.experiment)
+if Path(opt.experiment).exists():
+    shutil.rmtree(opt.experiment, ignore_errors=True)
+    print('Removed '+str(opt.experiment))
+
 # Save all the codes
 os.system('mkdir %s' % opt.experiment )
 os.system('cp *.py %s' % opt.experiment )
+
+writer = SummaryWriter(opt.experiment, flush_secs=10)
+print('=====>Summary writing to %s'%opt.experiment)
 
 if torch.cuda.is_available() and opt.noCuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
 # Initialize network
-net = faceNet.faceNet(m = opt.marginFactor, feature = False )
-lossLayer = faceNet.CustomLoss(s = opt.scaleFactor )
+# net = faceNet.faceNet(m = opt.marginFactor, feature = False )
+# net = faceNetBN.faceNet(m = opt.marginFactor, feature = False )
+# net = faceNet2.sphere(t=20)
+net = faceNet.faceNet(m = opt.marginFactor, feature = False)
+lossLayer = faceNet.CustomLoss(s = opt.scaleFactor, m = opt.marginFactor)
 
 # Move network and containers to gpu
 if not opt.noCuda:
     net = net.cuda(opt.gpuId )
+    lossLayer = lossLayer.cuda(opt.gpuId)
 
 # Initialize optimizer
 optimizer = optim.SGD(net.parameters(), lr=opt.initLR, momentum=0.9, weight_decay=5e-4 )
@@ -58,6 +74,8 @@ faceDataset = dataLoader.BatchLoader(
         cropSize = (opt.imWidth, opt.imHeight )
         )
 faceLoader = DataLoader(faceDataset, batch_size = opt.batchSize, num_workers = 16, shuffle = False )
+
+
 
 lossArr = []
 accuracyArr = []
@@ -91,6 +109,14 @@ for epoch in range(0, opt.nepoch ):
         lossArr.append(loss.cpu().data.item() )
         accuracyArr.append(accuracy )
 
+        writer.add_scalar('loss_train/loss', loss.cpu().data.item(), iteration)
+        writer.add_scalar('loss_train/accuracy', accuracy, iteration)
+
+        writer.add_scalar('training/epoch', epoch, iteration)
+        writer.add_scalar('training/iteration', iteration, iteration)
+        current_lr = optimizer.param_groups[0]['lr']
+        writer.add_scalar('training/lr', current_lr, iteration)
+
         if iteration >= 1000:
             meanLoss = np.mean(np.array(lossArr[-1000:] ) )
             meanAccuracy = np.mean(np.array(accuracyArr[-1000:] ) )
@@ -102,6 +128,10 @@ for epoch in range(0, opt.nepoch ):
         print('Epoch %d iteration %d: Accura %.5f Accumulated Accura %.5f' % (epoch, iteration, accuracyArr[-1], meanAccuracy ) )
         trainingLog.write('Epoch %d iteration %d: Loss %.5f Accumulated Loss %.5f \n' % (epoch, iteration, lossArr[-1], meanLoss ) )
         trainingLog.write('Epoch %d iteration %d: Accura %.5f Accumulated Accura %.5f\n' % (epoch, iteration, accuracyArr[-1], meanAccuracy ) )
+
+        writer.add_scalar('loss_train_mean/loss', meanLoss, iteration)
+        writer.add_scalar('loss_train_mean/accuracy', meanAccuracy, iteration)
+
         if iteration == 1:
             vutils.save_image( 0.5 * (imBatch.data+1), '%s/images.png' % (opt.experiment ) )
 
