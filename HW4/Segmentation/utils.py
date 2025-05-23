@@ -1,0 +1,89 @@
+import numpy as np
+import cv2
+
+def getWriterPath(task='train', exper_name='', date=True):
+    import datetime
+    prefix = 'runs/'
+    str_date_time = ''
+    if exper_name != '':
+        exper_name += '_'
+    if date:
+        str_date_time = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    return prefix + task + '/' + exper_name + str_date_time
+
+def computeAccuracy( pred, labelIndexBatch, maskBatch, numClasses = 21 ):
+    hist = np.zeros(numClasses * numClasses, dtype=np.int64 )
+
+    pred = pred.cpu().data.numpy()
+    assert( pred.shape[1] == numClasses )
+    pred = pred.argmin(axis = 1 )
+
+    gt = labelIndexBatch.cpu().data.numpy()
+    gt = gt.squeeze(1)
+    mask = maskBatch.cpu().data.numpy()
+    mask = mask.squeeze(1)
+
+    assert(gt.max() < numClasses )
+    assert(pred.max() < numClasses )
+
+    sumim = gt * numClasses + pred
+    sumim = sumim[mask != 0].squeeze()
+
+    histIm, _ = np.histogram(sumim, np.arange(numClasses * numClasses+1) )
+    hist[0:len(histIm ) ] += histIm
+
+    return hist.reshape(numClasses, numClasses )
+
+def save_label(label, mask, cmap, name, nrows, ncols ):
+    label = label.cpu().numpy()
+    assert(label.shape[1] == cmap.shape[0] )
+    label = label.argmax(axis= 1 )
+
+    mask = mask.cpu().numpy().squeeze(1)
+
+    imHeight, imWidth = label.shape[1], label.shape[2]
+    outputImage = np.zeros( (imHeight*nrows, imWidth*ncols, 3), dtype=np.float32 )
+    for r in range(0, nrows ):
+        for c in range(0, ncols ):
+            imId = r * ncols + c
+            if imId >= label.shape[0]:
+                break
+
+            maskIm = mask[imId, :, :][:, :, np.newaxis ]
+
+            labelIm = label[imId, :, : ]
+            labelIm = cmap[labelIm.flatten(), :]
+            labelIm = labelIm.reshape(imHeight, imWidth, 3 )
+
+            labelIm = labelIm + (1 - maskIm )
+
+            rs = r * imHeight
+            cs = c * imWidth
+            outputImage[rs:rs+imHeight, cs:cs+imWidth, :] = labelIm
+
+    outputImage = (np.clip(outputImage, 0, 1) * 255).astype(np.float32 )
+    if name is None:
+        return outputImage[:, :, ::-1]
+    else:
+        cv2.imwrite(name, outputImage[:, :, ::-1] )
+
+    return
+
+def sort_dataBatch(dataBatch):
+    def put_data_into_batch(data_dict, name_data, data_batch_dict, name_data_batch):
+        data_batch = data_batch_dict[name_data_batch]
+        data = data_dict[name_data]
+        # data_batch.data.resize_(data.size() )
+        # data_batch.data.copy_(data )
+        data_batch = Variable(data)
+        return data_batch
+
+    # imBatch = self.dataBatches['imBatch']
+    # # Read data
+    names_data = ['im', 'label', 'labelIndex', 'mask']
+    names_data_batch = ['imBatch', 'labelBatch', 'labelIndexBatch', 'maskBatch']
+    for i in range(len(names_data)):
+        dataBatch[names_data_batch[i]] = \
+            put_data_into_batch(dataBatch, names_data[i], 
+                                dataBatches, names_data_batch[i])
+    return dataBatch
