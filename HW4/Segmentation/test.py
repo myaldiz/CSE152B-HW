@@ -15,11 +15,11 @@ import scipy.io as io
 
 parser = argparse.ArgumentParser()
 # The locationi of training set
-parser.add_argument('--imageRoot', default='/datasets/cs152b-sp22-a00-public/hw4_data/VOCdevkit/VOC2012/JPEGImages', help='path to input images' )
-parser.add_argument('--labelRoot', default='/datasets/cs152b-sp22-a00-public/hw4_data/VOCdevkit/VOC2012/SegmentationClass', help='path to input images' )
-parser.add_argument('--fileList', default='/datasets/cs152b-sp22-a00-public/hw4_data/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt', help='path to input images' )
+parser.add_argument('--imageRoot', default='~/public/VOCdevkit/VOC2012/JPEGImages', help='path to input images', type=os.path.expanduser)
+parser.add_argument('--labelRoot', default='~/public/VOCdevkit/VOC2012/SegmentationClass', help='path to input images', type=os.path.expanduser)
+parser.add_argument('--fileList', default='~/public/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt', help='path to input images', type=os.path.expanduser)
+parser.add_argument('--modelRoot', default='~/public/unet_checkpoints/unet_original_zq', type=os.path.expanduser)
 parser.add_argument('--experiment', default='test', help='the path to store sampled images and models' )
-parser.add_argument('--modelRoot', default='checkpoint', help='the path to store the testing results')
 parser.add_argument('--epochId', type=int, default=300, help='the number of epochs being trained')
 parser.add_argument('--batchSize', type=int, default=16, help='the size of a batch' )
 parser.add_argument('--numClasses', type=int, default=21, help='the number of classes' )
